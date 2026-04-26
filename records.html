@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LOVE METER 記録</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b1220;
+  color:white;
+  font-family:sans-serif;
+}
+.wrap{
+  width:min(900px,92%);
+  margin:20px auto;
+}
+.card{
+  background:rgba(255,255,255,.08);
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:12px;
+}
+button{
+  padding:10px;
+  border-radius:8px;
+  border:0;
+  cursor:pointer;
+}
+.record{
+  cursor:pointer;
+}
+pre{
+  background:#111;
+  padding:10px;
+  border-radius:8px;
+  overflow:auto;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <h1>📊 記録一覧</h1>
+
+  <input id="codeInput" placeholder="セッションコード">
+  <button onclick="load()">読み込み</button>
+
+  <div id="list"></div>
+
+  <h2>📄 詳細</h2>
+  <div id="detail"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDa37qvYDZsdQC6EpMqiNpUqhEXoszvjRA",
+  authDomain: "lovemeter-577b4.firebaseapp.com",
+  databaseURL: "https://lovemeter-577b4-default-rtdb.firebaseio.com",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+window.load = async function(){
+  const code = document.getElementById("codeInput").value.trim().toUpperCase();
+
+  const snap = await get(ref(db, `sessions/${code}/history`));
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  if(!snap.exists()){
+    list.innerHTML = "データなし";
+    return;
+  }
+
+  const data = snap.val();
+
+  Object.entries(data).reverse().forEach(([id, rec])=>{
+    const div = document.createElement("div");
+    div.className = "card record";
+
+    const date = new Date(Number(id)).toLocaleString();
+
+    div.innerHTML = `
+      <h3>${date}</h3>
+      <button onclick='view(${JSON.stringify(rec)})'>詳細を見る</button>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+window.view = function(rec){
+  const detail = document.getElementById("detail");
+
+  detail.innerHTML = `
+    <div class="card">
+      <h3>概要</h3>
+      <p>開始: ${new Date(rec.startedAt).toLocaleString()}</p>
+      <p>終了: ${new Date(rec.endedAt).toLocaleString()}</p>
+      <p>LOVE平均: ${rec.summary.mutual}</p>
+      <p>SYNC: ${rec.summary.sync}</p>
+      <p>VAR: ${rec.summary.vari}</p>
+      <p>CHEEK: ${rec.summary.cheekM}</p>
+    </div>
+
+    <div class="card">
+      <h3>生データ</h3>
+      <pre>${JSON.stringify(rec.ticks, null, 2)}</pre>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
