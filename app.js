@@ -1,4 +1,12 @@
-import { SESSION, subscribeTicks, advanceTick, writeTick, resetSession } from "./sync.js";
+import {
+  SESSION,
+  subscribeTicks,
+  advanceTick,
+  writeTick,
+  resetSession,
+  setRunning,
+  subscribeControl
+} from "./sync.js";
 
 const $ = (id)=>document.getElementById(id);
 
@@ -66,12 +74,10 @@ let sessionMode = "rest";
 let cheek = 0;
 let prevMutualScore = 0;
 
-// Bluetooth心拍計
 let hrDevice = null;
 let hrCharacteristic = null;
 let latestAutoHR = null;
 
-// ぬるぬる表示用
 let displayScores = { sync: 0, vari: 0, cheekM: 0, mutual: 0 };
 let targetScores  = { sync: 0, vari: 0, cheekM: 0, mutual: 0 };
 let animFrame = null;
@@ -89,13 +95,14 @@ function parseHeartRate(value){
   if(is16Bit){
     return value.getUint16(1, true);
   }
+
   return value.getUint8(1);
 }
 
 async function connectHeartRate(){
   try{
     if(!navigator.bluetooth){
-      alert("このブラウザはBluetooth未対応です。Windows/AndroidのChromeまたはEdgeで試してください。");
+      alert("このブラウザはBluetooth未対応です。HTTPSのChromeまたはEdgeで試してください。");
       setHRStatus("未対応");
       return;
     }
@@ -128,12 +135,9 @@ async function connectHeartRate(){
       if(!Number.isFinite(hr) || hr <= 0) return;
 
       latestAutoHR = hr;
-
-      // ここでLOVE METERの入力欄へ自動入力
       els.hrMine.value = hr;
-
-      // 表示も更新
       els.lastMine.textContent = hr + " bpm";
+
       setHRStatus("接続中: " + hr + " bpm");
       els.connectHRBtn.textContent = "心拍接続中";
     });
@@ -183,35 +187,41 @@ function setMeter(elBar, score){
 
 function rankFor(score){
   const s = score;
+
   if(s >= 95) return ["Destiny", "— 伝説の空気"];
   if(s >= 85) return ["Crush", "— 近い、近いって"];
   if(s >= 70) return ["Sync", "— テンポが合ってる"];
   if(s >= 55) return ["Warm", "— 上がりはじめ"];
   if(s >= 40) return ["Neutral", "— 様子見"];
   if(s >= 25) return ["Awkward", "— まだ硬い"];
+
   return ["Quiet", "— 準備中"];
 }
 
 function kaomojiFor(score){
   const s = score;
+
   if(s >= 95) return "( 💖‿💖 )";
   if(s >= 85) return "(♡ˊᵕˋ♡)";
   if(s >= 70) return "(´,,•ω•,,)♡";
   if(s >= 55) return "(//ω//)";
   if(s >= 40) return "(・∀・)";
   if(s >= 25) return "(•_•;)";
+
   return "(・_・)";
 }
 
 function commentFor(score){
   const pick = (arr)=>arr[Math.floor(Math.random() * arr.length)];
   const s = score;
+
   if(s >= 95) return pick(["目が💖になってるやつ","これは…イベント発生。","完全にヒロインルート"]);
   if(s >= 85) return pick(["距離、近いって。","会話のテンポ神","空気が甘い"]);
   if(s >= 70) return pick(["いい感じに噛み合ってる","ちょいドキドキ域","シンクロしてきた"]);
   if(s >= 55) return pick(["これから上がるやつ","まだ序盤って感じ","悪くない"]);
   if(s >= 40) return pick(["様子見フェーズ","ちょっと緊張？","空気が読めてきた"]);
   if(s >= 25) return pick(["すれ違い気味？","まだウォームアップ","相手のターン待ち"]);
+
   return pick(["0から始めるLOVE","まず深呼吸","今日の天気の話から"]);
 }
 
@@ -222,6 +232,7 @@ function commentBucket(score){
   if(score >= 55) return 3;
   if(score >= 40) return 2;
   if(score >= 25) return 1;
+
   return 0;
 }
 
@@ -408,7 +419,6 @@ function computeScores(ticksObj){
 
   const sync = denom ? (numer / denom) : 0;
 
-  // VAR：二人それぞれの心拍変動幅の平均を0〜100に正規化
   const hrAValues = rows.map(r => r.hrA).filter(Number.isFinite);
   const hrBValues = rows.map(r => r.hrB).filter(Number.isFinite);
 
@@ -418,7 +428,6 @@ function computeScores(ticksObj){
   const avgRange = (rangeA + rangeB) / 2;
   const vari = Math.min(avgRange * 2, 100);
 
-  // 新公式：LOVE = 0.6×SYNC + 0.3×VAR + 0.1×CHEEK
   const mutual =
     0.6 * (sync * 100) +
     0.3 * vari +
@@ -488,8 +497,6 @@ function renderFromTicks(ticks){
   els.countMine.textContent = myCount;
   els.countOther.textContent = otherCount;
 
-  // Bluetooth受信中はlastMineに現在値を出しておきたいので、
-  // Firebase側の最新値があるときだけ送信済み値で上書きする。
   if(myLast){
     els.lastMine.textContent = myLast.hr;
   }else if(latestAutoHR){
@@ -546,12 +553,13 @@ async function sendNow(){
   }
 }
 
-// ---------- timer ----------
-function startMeasure(){
+// ---------- local timer ----------
+function runLocalStart(){
   if(isRunning) return;
 
   isRunning = true;
   els.status.textContent = "計測中";
+
   remain = 10;
   els.nextIn.textContent = `${remain}s`;
 
@@ -574,15 +582,33 @@ function startMeasure(){
   }, 1000);
 }
 
-function stopMeasure(){
-  if(!isRunning) return;
-
+function runLocalStop(){
   isRunning = false;
-  clearInterval(timer);
-  timer = null;
+
+  if(timer){
+    clearInterval(timer);
+    timer = null;
+  }
 
   els.status.textContent = "停止中";
   els.nextIn.textContent = "-";
+}
+
+// ---------- synced control ----------
+async function startMeasure(){
+  if(SESSION.role === "me"){
+    await setRunning(true);
+  }
+
+  runLocalStart();
+}
+
+async function stopMeasure(){
+  if(SESSION.role === "me"){
+    await setRunning(false);
+  }
+
+  runLocalStop();
 }
 
 // ---------- buttons wiring ----------
@@ -605,6 +631,7 @@ els.resetBtn.onclick = async ()=>{
     displayScores = { sync: 0, vari: 0, cheekM: 0, mutual: 0 };
 
     updateScoreTexts(0, 0, 0, 0);
+    runLocalStop();
 
     alert("リセットしました。相手側も再読み込みしてね。");
   }
@@ -618,4 +645,16 @@ setConnected(true, "— Connecting…");
 subscribeTicks((ticks)=>{
   setConnected(true, "— Syncing…");
   renderFromTicks(ticks);
+});
+
+subscribeControl((ctrl)=>{
+  if(!ctrl) return;
+
+  if(ctrl.running && !isRunning){
+    runLocalStart();
+  }
+
+  if(!ctrl.running && isRunning){
+    runLocalStop();
+  }
 });
