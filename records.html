@@ -3,109 +3,298 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LOVE METER 記録</title>
+<title>LOVE METER 記録ページ</title>
 
 <style>
 *{box-sizing:border-box}
+
 body{
   margin:0;
-  font-family:sans-serif;
-  background:#0b1220;
-  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;
+  background:
+    radial-gradient(900px 500px at 10% -10%,rgba(255,95,162,.22),transparent 60%),
+    radial-gradient(800px 500px at 90% 0%,rgba(111,168,255,.22),transparent 60%),
+    #0b1220;
+  color:#eef3ff;
 }
+
 .wrap{
-  width:min(1100px,94%);
-  margin:20px auto;
+  width:min(1120px,94%);
+  margin:28px auto 60px;
 }
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-end;
+  margin-bottom:20px;
+}
+
+h1{
+  margin:0;
+  font-size:34px;
+  letter-spacing:.04em;
+}
+
+h2{
+  margin:0 0 14px;
+}
+
+.sub{
+  opacity:.75;
+  margin-top:6px;
+  line-height:1.6;
+}
+
 .card{
-  background:rgba(255,255,255,.08);
-  padding:18px;
-  border-radius:18px;
-  margin-bottom:16px;
+  background:rgba(255,255,255,.075);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  backdrop-filter:blur(10px);
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:18px;
 }
-h1,h2{margin:0 0 12px}
-input,button{
-  padding:10px;
-  border-radius:10px;
-  border:0;
-  margin-right:8px;
+
+.inputRow{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
 }
-button{
-  background:#ff5fa2;
+
+input{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.1);
   color:white;
+  font-size:16px;
+}
+
+button{
+  border:0;
+  border-radius:14px;
+  padding:12px 16px;
+  font-weight:800;
+  color:white;
+  background:linear-gradient(135deg,#ff5fa2,#6fa8ff);
   cursor:pointer;
 }
+
+button.secondary{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+}
+
+.metric{
+  padding:16px;
+  border-radius:18px;
+  background:rgba(255,255,255,.08);
+}
+
+.metricLabel{
+  opacity:.7;
+  font-size:13px;
+}
+
+.metricValue{
+  font-size:30px;
+  font-weight:900;
+  margin-top:4px;
+}
+
+.recordItem{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+
+.recordTitle{
+  font-weight:900;
+  font-size:18px;
+}
+
+.recordMeta{
+  opacity:.75;
+  font-size:13px;
+  margin-top:6px;
+}
+
 canvas{
   width:100%;
-  height:300px;
-  background:#111;
-  border-radius:14px;
-  margin-top:10px;
+  max-width:100%;
+  height:320px;
+  background:rgba(0,0,0,.18);
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.12);
 }
+
 table{
   width:100%;
   border-collapse:collapse;
+  overflow:hidden;
+  border-radius:16px;
+  font-size:14px;
 }
+
 th,td{
-  padding:8px;
+  padding:10px;
   border-bottom:1px solid rgba(255,255,255,.1);
-  text-align:center;
+  text-align:right;
+  white-space:nowrap;
 }
-th{background:rgba(255,255,255,.1)}
+
+th:first-child,td:first-child{
+  text-align:left;
+}
+
+th{
+  background:rgba(255,255,255,.1);
+}
+
+tr:hover{
+  background:rgba(255,255,255,.06);
+}
+
+.explainGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+
+.explainBox{
+  background:rgba(255,255,255,.07);
+  border-radius:18px;
+  padding:16px;
+  line-height:1.7;
+}
+
+.heart{
+  position:fixed;
+  pointer-events:none;
+  animation:floatUp 1.4s ease-out forwards;
+  z-index:99;
+}
+
+@keyframes floatUp{
+  from{transform:translateY(0) scale(1);opacity:1}
+  to{transform:translateY(-90px) scale(1.6);opacity:0}
+}
+
+@media(max-width:850px){
+  .grid,.explainGrid{grid-template-columns:1fr}
+  .header{display:block}
+}
 </style>
 </head>
 
 <body>
 <div class="wrap">
 
-<h1>📊 LOVE METER 記録</h1>
+  <div class="header">
+    <div>
+      <h1>📊 LOVE METER 記録ページ</h1>
+      <div class="sub">実験ごとの心拍数・LOVE METER・心拍同期・心拍変動を確認できます。</div>
+    </div>
+    <button class="secondary" onclick="location.href='index.html'">LOVE METERへ戻る</button>
+  </div>
 
-<div class="card">
-<input id="codeInput" placeholder="セッションコード">
-<button onclick="loadRecords()">読み込み</button>
-<div id="list"></div>
-</div>
+  <section class="card">
+    <h2>記録を読み込む</h2>
+    <div class="inputRow">
+      <input id="codeInput" placeholder="セッションコード 例：H2">
+      <button onclick="loadRecords()">読み込み</button>
+    </div>
+    <p id="loadStatus" class="sub">セッションコードを入力してください。</p>
+  </section>
 
-<div id="detail" style="display:none">
+  <section class="card">
+    <h2>🫀 指標の意味</h2>
+    <div class="explainGrid">
+      <div class="explainBox">
+        <b>心拍同期</b><br>
+        2人の心拍が「同じ方向に変化した割合」です。片方が上がった時にもう片方も上がるなど、反応のリズムが合っているかを見ます。
+      </div>
+      <div class="explainBox">
+        <b>心拍変動</b><br>
+        実験中に心拍がどれくらい動いたかを表します。高いほど、会話・緊張・感情の動きなどで身体反応が大きく変化した可能性があります。
+      </div>
+      <div class="explainBox">
+        <b>頬の同時反応</b><br>
+        2人の頬が同時に「上がった」と記録された割合です。表情や照れなどの補助的な反応として扱います。
+      </div>
+    </div>
+  </section>
 
-<div class="card">
-<h2>概要</h2>
-<p>LOVE METER: <span id="mLove"></span></p>
-<p>心拍同期: <span id="mSync"></span></p>
-<p>心拍変動: <span id="mVar"></span></p>
-<p>頬の同時反応: <span id="mCheek"></span></p>
-</div>
+  <section class="card">
+    <h2>実験一覧</h2>
+    <div id="list">まだ読み込まれていません。</div>
+  </section>
 
-<div class="card">
-<h2>LOVE推移</h2>
-<canvas id="loveChart" width="1000" height="300"></canvas>
-</div>
+  <section id="detail" style="display:none">
+    <div class="card">
+      <h2>実験概要</h2>
+      <div class="grid">
+        <div class="metric">
+          <div class="metricLabel">LOVE METER</div>
+          <div id="mLove" class="metricValue">-</div>
+        </div>
+        <div class="metric">
+          <div class="metricLabel">心拍同期</div>
+          <div id="mSync" class="metricValue">-</div>
+        </div>
+        <div class="metric">
+          <div class="metricLabel">心拍変動</div>
+          <div id="mVar" class="metricValue">-</div>
+        </div>
+        <div class="metric">
+          <div class="metricLabel">頬の同時反応</div>
+          <div id="mCheek" class="metricValue">-</div>
+        </div>
+      </div>
+      <p id="timeInfo" class="sub"></p>
+      <button onclick="downloadCSV()">CSVダウンロード</button>
+    </div>
 
-<div class="card">
-<h2>心拍推移</h2>
-<canvas id="hrChart" width="1000" height="300"></canvas>
-</div>
+    <div class="card">
+      <h2>📈 LOVE METER 推移</h2>
+      <canvas id="loveChart" width="1100" height="340"></canvas>
+    </div>
 
-<div class="card">
-<h2>詳細データ</h2>
-<table>
-<thead>
-<tr>
-<th>時間</th>
-<th>ME</th>
-<th>YOU</th>
-<th>LOVE</th>
-<th>同期</th>
-<th>変動</th>
-<th>頬</th>
-</tr>
-</thead>
-<tbody id="dataBody"></tbody>
-</table>
-</div>
+    <div class="card">
+      <h2>🫀 心拍数 推移</h2>
+      <canvas id="hrChart" width="1100" height="340"></canvas>
+    </div>
 
-</div>
-
+    <div class="card">
+      <h2>📋 時間ごとの詳細データ</h2>
+      <div style="overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>経過時間</th>
+              <th>ME心拍</th>
+              <th>YOU心拍</th>
+              <th>LOVE METER</th>
+              <th>心拍同期</th>
+              <th>心拍変動</th>
+              <th>頬の同時反応</th>
+              <th>状況</th>
+            </tr>
+          </thead>
+          <tbody id="dataBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script type="module">
@@ -116,216 +305,478 @@ const firebaseConfig = {
   apiKey: "AIzaSyDa37qvYDZsdQC6EpMqiNpUqhEXoszvjRA",
   authDomain: "lovemeter-577b4.firebaseapp.com",
   databaseURL: "https://lovemeter-577b4-default-rtdb.firebaseio.com",
+  projectId: "lovemeter-577b4",
+  storageBucket: "lovemeter-577b4.firebasestorage.app",
+  messagingSenderId: "21237442454",
+  appId: "1:21237442454:web:152aacdf897e5e8052dfb7"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let rows = [];
+let currentRows = [];
+let currentRecord = null;
 
-function clamp(n){return Math.max(0,Math.min(100,Math.round(n)))}
-function sign(x){return x>0?1:x<0?-1:0}
+function sign(x){
+  return x > 0 ? 1 : x < 0 ? -1 : 0;
+}
 
-function score(ticks){
-  const keys = Object.keys(ticks||{}).map(Number).sort((a,b)=>a-b);
-  const r=[];
+function clamp100(n){
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
 
-  for(let k of keys){
-    const t=ticks[k];
-    if(!t.me||!t.you)continue;
+function fmtTime(ms){
+  const sec = Math.max(0, Math.round(ms / 1000));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}分${String(s).padStart(2,"0")}秒`;
+}
 
-    r.push({
-      me:t.me.hr,
-      you:t.you.hr,
-      cheekM:(t.me.cheek===1&&t.you.cheek===1)?1:0
+function modeJa(mode){
+  if(mode === "talk") return "会話";
+  if(mode === "silent") return "無言";
+  return "安静";
+}
+
+function makeHearts(){
+  for(let i=0;i<10;i++){
+    const h = document.createElement("div");
+    h.className = "heart";
+    h.textContent = Math.random() < .5 ? "💗" : "✨";
+    h.style.left = (20 + Math.random()*60) + "%";
+    h.style.top = (65 + Math.random()*20) + "%";
+    h.style.fontSize = (20 + Math.random()*22) + "px";
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(),1500);
+  }
+}
+
+function scoreRows(ticks){
+  const keys = Object.keys(ticks || {}).map(Number).filter(Number.isFinite).sort((a,b)=>a-b);
+  const paired = [];
+
+  for(const k of keys){
+    const item = ticks[String(k)];
+    if(!item || !item.me || !item.you) continue;
+
+    paired.push({
+      tick:k,
+      meHr:Number(item.me.hr),
+      youHr:Number(item.you.hr),
+      meCheek:Number(item.me.cheek),
+      youCheek:Number(item.you.cheek),
+      mode:item.me.mode || item.you.mode || "rest",
+      time:item.me.measuredAt || item.you.measuredAt || item.me.tLocal || item.you.tLocal || null
     });
   }
 
-  const out=[];
+  const rows = [];
 
-  for(let i=0;i<r.length;i++){
-    const sub=r.slice(0,i+1);
+  for(let end=0; end<paired.length; end++){
+    const sub = paired.slice(0,end+1);
 
-    let denom=0,numer=0;
+    const cheekBothUp = sub.filter(r=>r.meCheek===1 && r.youCheek===1).length;
+    const cheekM = sub.length ? cheekBothUp / sub.length : 0;
 
-    for(let j=1;j<sub.length;j++){
-      const dA=sub[j].me-sub[j-1].me;
-      const dB=sub[j].you-sub[j-1].you;
-      if(sign(dA)!==0){
+    let denom = 0;
+    let numer = 0;
+
+    for(let i=1;i<sub.length;i++){
+      const dA = sub[i].meHr - sub[i-1].meHr;
+      const dB = sub[i].youHr - sub[i-1].youHr;
+      const sA = sign(dA);
+      const sB = sign(dB);
+
+      if(sA !== 0){
         denom++;
-        if(sign(dA)===sign(dB))numer++;
+        if(sA === sB) numer++;
       }
     }
 
-    const sync=denom?numer/denom:0;
+    const sync = denom ? numer / denom : 0;
 
-    const me=sub.map(x=>x.me);
-    const you=sub.map(x=>x.you);
+    const meVals = sub.map(r=>r.meHr).filter(Number.isFinite);
+    const youVals = sub.map(r=>r.youHr).filter(Number.isFinite);
 
-    const vari=Math.min(((Math.max(...me)-Math.min(...me)+Math.max(...you)-Math.min(...you))/2)*2,100);
+    const rangeA = meVals.length ? Math.max(...meVals) - Math.min(...meVals) : 0;
+    const rangeB = youVals.length ? Math.max(...youVals) - Math.min(...youVals) : 0;
+    const vari = Math.min(((rangeA + rangeB) / 2) * 2, 100);
 
-    const cheek=sub.filter(x=>x.cheekM===1).length/sub.length;
+    const love =
+      0.6 * (sync * 100) +
+      0.3 * vari +
+      0.1 * (cheekM * 100);
 
-    const love=0.6*(sync*100)+0.3*vari+0.1*(cheek*100);
-
-    out.push({
-      me:sub[sub.length-1].me,
-      you:sub[sub.length-1].you,
-      love:clamp(love),
-      sync:clamp(sync*100),
-      vari:clamp(vari),
-      cheek:clamp(cheek*100),
-      time:i*10
+    rows.push({
+      ...paired[end],
+      love: clamp100(love),
+      sync: clamp100(sync * 100),
+      vari: clamp100(vari),
+      cheekM: clamp100(cheekM * 100),
     });
   }
 
-  return out;
+  return rows;
 }
 
 window.loadRecords = async function(){
-  const code=document.getElementById("codeInput").value.toUpperCase();
-  const snap=await get(ref(db,`sessions/${code}/history`));
+  const code = document.getElementById("codeInput").value.trim().toUpperCase();
+  const status = document.getElementById("loadStatus");
+  const list = document.getElementById("list");
 
-  const list=document.getElementById("list");
-  list.innerHTML="";
-
-  if(!snap.exists()){
-    list.innerHTML="データなし";
+  if(!code){
+    status.textContent = "セッションコードを入力してください。";
     return;
   }
 
-  const data=snap.val();
+  status.textContent = "読み込み中...";
+  list.innerHTML = "";
 
-  Object.entries(data).forEach(([id,rec])=>{
-    const div=document.createElement("div");
-    div.className="card";
+  const snap = await get(ref(db, `sessions/${code}/history`));
 
-    div.innerHTML=`
-      <b>${new Date(Number(id)).toLocaleString()}</b>
-      <button onclick='view(${JSON.stringify(rec.ticks)})'>見る</button>
+  if(!snap.exists()){
+    status.textContent = "記録が見つかりません。停止時に保存されたか確認してください。";
+    list.textContent = "データなし";
+    return;
+  }
+
+  const data = snap.val();
+  const entries = Object.entries(data).sort((a,b)=>Number(b[0])-Number(a[0]));
+
+  status.textContent = `${entries.length}件の記録が見つかりました。`;
+
+  entries.forEach(([id,rec])=>{
+    const div = document.createElement("div");
+    div.className = "card recordItem";
+
+    const start = rec.startedAt ? new Date(rec.startedAt).toLocaleString() : new Date(Number(id)).toLocaleString();
+    const rows = scoreRows(rec.ticks);
+    const last = rows[rows.length-1] || {};
+
+    div.innerHTML = `
+      <div>
+        <div class="recordTitle">${start}</div>
+        <div class="recordMeta">
+          データ数：${rows.length} ／ LOVE METER：${last.love ?? "-"} ／ 心拍同期：${last.sync ?? "-"}
+        </div>
+      </div>
+      <button>詳細を見る</button>
     `;
 
+    div.querySelector("button").onclick = ()=>viewRecord(rec);
     list.appendChild(div);
   });
-}
+};
 
-window.view = function(ticks){
-  rows=score(ticks);
+function viewRecord(rec){
+  currentRecord = rec;
+  currentRows = scoreRows(rec.ticks);
 
-  const last=rows[rows.length-1];
-
-  document.getElementById("detail").style.display="block";
-
-  mLove.textContent=last.love;
-  mSync.textContent=last.sync;
-  mVar.textContent=last.vari;
-  mCheek.textContent=last.cheek;
-
-  drawLove();
-  drawHR();
-  drawTable();
-}
-
-function drawLove(){
-  const c=document.getElementById("loveChart");
-  const ctx=c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-
-  const pad=60,w=c.width-120,h=c.height-100;
-
-  ctx.strokeRect(pad,40,w,h);
-
-  for(let i=0;i<=100;i+=20){
-    const y=40+h-(i/100*h);
-    ctx.fillText(i,20,y);
-    ctx.beginPath();
-    ctx.moveTo(pad,y);
-    ctx.lineTo(pad+w,y);
-    ctx.stroke();
+  if(currentRows.length === 0){
+    alert("MEとYOUがそろったデータがありません。");
+    return;
   }
 
-  rows.forEach((r,i)=>{
-    const x=pad+(i/(rows.length-1))*w;
-    ctx.fillText(r.time+"s",x,40+h+20);
-  });
+  const last = currentRows[currentRows.length-1];
 
-  ctx.beginPath();
-  rows.forEach((r,i)=>{
-    const x=pad+(i/(rows.length-1))*w;
-    const y=40+h-(r.love/100*h);
-    if(i===0)ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
-  });
-  ctx.strokeStyle="#ff5fa2";
-  ctx.stroke();
+  document.getElementById("detail").style.display = "block";
+  document.getElementById("mLove").textContent = last.love;
+  document.getElementById("mSync").textContent = last.sync;
+  document.getElementById("mVar").textContent = last.vari;
+  document.getElementById("mCheek").textContent = last.cheekM;
+
+  const start = rec.startedAt || currentRows[0].time || Date.now();
+  const end = rec.endedAt || currentRows[currentRows.length-1].time || Date.now();
+
+  document.getElementById("timeInfo").textContent =
+    `開始：${new Date(start).toLocaleString()} ／ 終了：${new Date(end).toLocaleString()} ／ 計測時間：約${fmtTime(end-start)}`;
+
+  renderTable(start);
+
+  drawLoveChart(
+    "loveChart",
+    currentRows.map((r,i)=>({
+      x:fmtTime((r.time || start + i*10000) - start),
+      y:r.love
+    }))
+  );
+
+  drawHeartRateChart(
+    "hrChart",
+    currentRows.map((r,i)=>({
+      x:fmtTime((r.time || start + i*10000) - start),
+      me:r.meHr,
+      you:r.youHr
+    }))
+  );
+
+  makeHearts();
+  window.scrollTo({top:document.getElementById("detail").offsetTop - 10, behavior:"smooth"});
 }
 
-function drawHR(){
-  const c=document.getElementById("hrChart");
-  const ctx=c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
+function renderTable(start){
+  const body = document.getElementById("dataBody");
+  body.innerHTML = "";
 
-  const pad=60,w=c.width-120,h=c.height-100;
+  currentRows.forEach((r,i)=>{
+    const time = r.time || start + i*10000;
+    const tr = document.createElement("tr");
 
-  ctx.strokeRect(pad,40,w,h);
-
-  const vals=rows.flatMap(r=>[r.me,r.you]);
-  const min=Math.min(...vals)-5;
-  const max=Math.max(...vals)+5;
-
-  function y(v){return 40+h-((v-min)/(max-min))*h;}
-
-  for(let i=min;i<=max;i+=10){
-    const yy=y(i);
-    ctx.fillText(i,20,yy);
-    ctx.beginPath();
-    ctx.moveTo(pad,yy);
-    ctx.lineTo(pad+w,yy);
-    ctx.stroke();
-  }
-
-  rows.forEach((r,i)=>{
-    const x=pad+(i/(rows.length-1))*w;
-    ctx.fillText(r.time+"s",x,40+h+20);
-  });
-
-  function line(key,color){
-    ctx.beginPath();
-    rows.forEach((r,i)=>{
-      const x=pad+(i/(rows.length-1))*w;
-      const yy=y(r[key]);
-      if(i===0)ctx.moveTo(x,yy);
-      else ctx.lineTo(x,yy);
-    });
-    ctx.strokeStyle=color;
-    ctx.stroke();
-  }
-
-  line("me","pink");
-  line("you","cyan");
-}
-
-function drawTable(){
-  const body=document.getElementById("dataBody");
-  body.innerHTML="";
-
-  rows.forEach(r=>{
-    const tr=document.createElement("tr");
-
-    tr.innerHTML=`
-      <td>${r.time}s</td>
-      <td>${r.me}</td>
-      <td>${r.you}</td>
+    tr.innerHTML = `
+      <td>${fmtTime(time - start)}</td>
+      <td>${r.meHr}</td>
+      <td>${r.youHr}</td>
       <td>${r.love}</td>
       <td>${r.sync}</td>
       <td>${r.vari}</td>
-      <td>${r.cheek}</td>
+      <td>${r.cheekM}</td>
+      <td>${modeJa(r.mode)}</td>
     `;
 
     body.appendChild(tr);
   });
 }
-</script>
 
+function drawAxes(ctx, options){
+  const {
+    c, padL, padR, padT, padB, minY, maxY, yStep,
+    title, yLabel, xLabel, xLabels
+  } = options;
+
+  const w = c.width - padL - padR;
+  const h = c.height - padT - padB;
+
+  ctx.clearRect(0,0,c.width,c.height);
+
+  ctx.fillStyle = "rgba(255,255,255,.9)";
+  ctx.font = "16px sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(title, padL, 26);
+
+  ctx.strokeStyle = "rgba(255,255,255,.25)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(padL,padT,w,h);
+
+  function y(v){
+    if(maxY === minY) return padT + h / 2;
+    return padT + h - ((v-minY)/(maxY-minY))*h;
+  }
+
+  ctx.font = "13px sans-serif";
+  ctx.fillStyle = "rgba(255,255,255,.75)";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+
+  for(let v=minY; v<=maxY; v+=yStep){
+    const yy = y(v);
+
+    ctx.strokeStyle = "rgba(255,255,255,.12)";
+    ctx.beginPath();
+    ctx.moveTo(padL,yy);
+    ctx.lineTo(padL+w,yy);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(255,255,255,.75)";
+    ctx.fillText(String(v), padL - 10, yy);
+  }
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  if(xLabels.length > 0){
+    const step = Math.max(1, Math.ceil(xLabels.length / 6));
+
+    xLabels.forEach((label,i)=>{
+      if(i % step !== 0 && i !== xLabels.length-1) return;
+
+      const x = padL + (xLabels.length === 1 ? 0 : (i/(xLabels.length-1))*w);
+
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.beginPath();
+      ctx.moveTo(x,padT);
+      ctx.lineTo(x,padT+h);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,.75)";
+      ctx.fillText(label, x, padT+h+10);
+    });
+  }
+
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  ctx.textAlign = "center";
+  ctx.fillText(xLabel, padL + w/2, c.height - 24);
+
+  ctx.save();
+  ctx.translate(18, padT + h/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+
+  return {w,h,y};
+}
+
+function drawLoveChart(canvasId, data){
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext("2d");
+
+  const padL = 68;
+  const padR = 24;
+  const padT = 44;
+  const padB = 60;
+
+  const axis = drawAxes(ctx, {
+    c,
+    padL,
+    padR,
+    padT,
+    padB,
+    minY:0,
+    maxY:100,
+    yStep:20,
+    title:"LOVE METER 推移",
+    yLabel:"LOVE METER 数値",
+    xLabel:"計測開始からの経過時間",
+    xLabels:data.map(d=>d.x)
+  });
+
+  if(data.length < 1) return;
+
+  ctx.beginPath();
+
+  data.forEach((p,i)=>{
+    const x = padL + (data.length === 1 ? 0 : (i/(data.length-1))*axis.w);
+    const y = axis.y(p.y);
+
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+
+  ctx.strokeStyle = "#ff79b8";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  data.forEach((p,i)=>{
+    const x = padL + (data.length === 1 ? 0 : (i/(data.length-1))*axis.w);
+    const y = axis.y(p.y);
+
+    ctx.beginPath();
+    ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+  });
+}
+
+function drawHeartRateChart(canvasId, data){
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext("2d");
+
+  const vals = data.flatMap(d=>[d.me,d.you]).filter(Number.isFinite);
+  if(vals.length === 0) return;
+
+  const rawMin = Math.min(...vals);
+  const rawMax = Math.max(...vals);
+
+  const minY = Math.max(30, Math.floor((rawMin - 10) / 10) * 10);
+  const maxY = Math.ceil((rawMax + 10) / 10) * 10;
+
+  const padL = 68;
+  const padR = 24;
+  const padT = 44;
+  const padB = 60;
+
+  const axis = drawAxes(ctx, {
+    c,
+    padL,
+    padR,
+    padT,
+    padB,
+    minY,
+    maxY,
+    yStep:10,
+    title:"心拍数 推移",
+    yLabel:"心拍数 bpm",
+    xLabel:"計測開始からの経過時間",
+    xLabels:data.map(d=>d.x)
+  });
+
+  ctx.font = "14px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ff79b8";
+  ctx.fillText("ME", padL + 130, 26);
+  ctx.fillStyle = "#7aa7ff";
+  ctx.fillText("YOU", padL + 180, 26);
+
+  function line(key, color){
+    ctx.beginPath();
+
+    data.forEach((p,i)=>{
+      const x = padL + (data.length === 1 ? 0 : (i/(data.length-1))*axis.w);
+      const yy = axis.y(p[key]);
+
+      if(i===0) ctx.moveTo(x,yy);
+      else ctx.lineTo(x,yy);
+    });
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    data.forEach((p,i)=>{
+      const x = padL + (data.length === 1 ? 0 : (i/(data.length-1))*axis.w);
+      const yy = axis.y(p[key]);
+
+      ctx.beginPath();
+      ctx.arc(x,yy,4,0,Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    });
+  }
+
+  line("me","#ff79b8");
+  line("you","#7aa7ff");
+}
+
+window.downloadCSV = function(){
+  if(!currentRows.length) return;
+
+  const start = currentRecord.startedAt || currentRows[0].time || Date.now();
+
+  const header = [
+    "elapsed",
+    "me_hr",
+    "you_hr",
+    "love_meter",
+    "heart_sync",
+    "heart_variation",
+    "cheek_mutual",
+    "mode"
+  ];
+
+  const lines = [header.join(",")];
+
+  currentRows.forEach((r,i)=>{
+    const time = r.time || start + i*10000;
+    lines.push([
+      fmtTime(time-start),
+      r.meHr,
+      r.youHr,
+      r.love,
+      r.sync,
+      r.vari,
+      r.cheekM,
+      modeJa(r.mode)
+    ].join(","));
+  });
+
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "love-meter-record.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+</script>
 </body>
 </html>
