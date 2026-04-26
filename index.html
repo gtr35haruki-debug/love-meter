@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LOVE METER</title>
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="theme-quiet">
+  <div id="titleOverlay" class="titleOverlay" aria-hidden="false">
+    <div class="titleCard">
+      <div class="brand">
+        <div class="brandMark">💗</div>
+        <div>
+          <div class="brandTitle">LOVE METER</div>
+          <div class="brandSub">Mutual Synchrony System</div>
+        </div>
+      </div>
+
+      <div class="titleSection">
+        <div class="titleLabel">あなたはどっち？</div>
+        <div class="rolePick">
+          <button id="pickMe" class="rolePickBtn" type="button">
+            <span class="roleBig">ME</span><span class="roleSmall">自分側</span>
+          </button>
+          <button id="pickYou" class="rolePickBtn" type="button">
+            <span class="roleBig">YOU</span><span class="roleSmall">相手側</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="titleSection">
+        <div class="titleLabel">セッションコード</div>
+        <div class="codeRow">
+          <input id="codeInput" class="codeInput" placeholder="例：AB12CD（空なら自動生成）" />
+          <button id="genCode" class="ghostBtn" type="button">自動生成</button>
+        </div>
+        <div class="tinyHint">同じコードで2台がつながります（大文字推奨）</div>
+      </div>
+
+      <div class="titleSection">
+        <button id="enterBtn" class="enterBtn" type="button" disabled>START</button>
+        <div id="titleWarn" class="titleWarn"></div>
+      </div>
+
+      <div class="titleFoot">
+        ※これは「恋愛の断定」ではなく「相互反応の同期」を表示します。
+      </div>
+
+      <div class="createdBy">Created by Potato Head</div>
+    </div>
+  </div>
+
+  <div id="appRoot" class="hidden">
+    <header class="wrap header">
+      <div>
+        <h1 class="title">LOVE METER</h1>
+        <p class="sub">
+          LOVE = 0.6×SYNC + 0.3×VAR + 0.1×CHEEK
+        </p>
+        <p class="sub">
+          SYNC：心拍変化の一致 ／ VAR：心拍の変動量 ／ CHEEK：頬の同時反応
+        </p>
+        <p class="sub">
+          セッション：<b id="sessionCodeView">-</b> ／ あなたのrole：<b id="roleView">-</b>
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="hud card">
+        <div class="hudTop">
+          <div class="hudLeft">
+            <div class="label">LOVE METER</div>
+            <div class="scoreRow">
+              <span id="mutualScore" class="score">0</span>
+              <span class="scoreUnit">/ 100</span>
+            </div>
+
+            <div class="rankRow">
+              <span id="rankName" class="rankName">Quiet</span>
+              <span id="rankTag" class="rankTag">—</span>
+            </div>
+
+            <div class="meter meterXL" aria-label="LOVE METER meter">
+              <div id="mutualBar" class="meterFill"></div>
+            </div>
+
+            <div id="syncHint" class="syncHint">— Not started</div>
+
+            <div class="breakdown">
+              <div class="bdItem">
+                <div class="bdTop"><span class="bdLabel">SYNC（心拍の同期）</span><span id="syncScore" class="bdScore">0</span></div>
+                <div class="meter meterSm"><div id="syncBar" class="meterFill"></div></div>
+              </div>
+
+              <div class="bdItem">
+                <div class="bdTop"><span class="bdLabel">VAR（心拍の変動量）</span><span id="varScore" class="bdScore">0</span></div>
+                <div class="meter meterSm"><div id="varBar" class="meterFill"></div></div>
+                <div class="bdNote">※二人の心拍の動きの大きさを表す補助指標</div>
+              </div>
+
+              <div class="bdItem">
+                <div class="bdTop"><span class="bdLabel">CHEEK（同時に上がった）</span><span id="cheekScore" class="bdScore">0</span></div>
+                <div class="meter meterSm"><div id="cheekBar" class="meterFill"></div></div>
+                <div class="bdNote">※「二人とも上がった」の割合（補助指標）</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hudRight">
+            <div class="miniCard">
+              <div class="miniTitle">状況</div>
+              <div class="seg">
+                <button id="segRest" class="segBtn isActive" type="button">安静</button>
+                <button id="segTalk" class="segBtn" type="button">会話</button>
+                <button id="segSilent" class="segBtn" type="button">無言</button>
+              </div>
+              <div class="hint">現在: <b id="sessionNow">安静</b></div>
+            </div>
+
+            <div class="miniCard">
+              <div class="miniTitle">頬（あなた）</div>
+              <div class="seg">
+                <button id="cheekUpBtn" class="segBtn" type="button">上がった</button>
+                <button id="cheekSameBtn" class="segBtn isActive" type="button">変わらない</button>
+                <button id="cheekDownBtn" class="segBtn" type="button">下がった</button>
+              </div>
+              <div class="hint">現在: <b id="cheekNow">変わらない</b></div>
+            </div>
+
+            <div class="miniCard">
+              <div class="miniTitle">計測</div>
+              <div class="btnRow">
+                <button id="connectHRBtn" type="button">心拍計に接続</button>
+                <button id="startBtn" type="button">計測スタート</button>
+                <button id="stopBtn" class="ghost" type="button">停止</button>
+                <button id="sendBtn" class="ghost" type="button">今の値を送信</button>
+                <button id="resetBtn" class="danger" type="button">リセット</button>
+              </div>
+              <div class="hint">
+                心拍計: <span id="hrStatus">未接続</span><br>
+                状態: <span id="status">停止中</span> ／ 次まで: <span id="nextIn">-</span><br>
+                同期: <span id="syncState">未接続</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="loveText">
+          <span id="loveKaomoji" class="kaomoji">（・_・）</span>
+          <span id="loveComment" class="commentText">まだ計測が始まっていません</span>
+        </p>
+
+        <p class="note">
+          ※「好感度を断定」ではありません。二人の反応の相互性・変動を推定表示します。
+        </p>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h2>あなたの心拍 (bpm)</h2>
+          <input id="hrMine" type="number" inputmode="numeric" placeholder="例: 78" />
+          <p class="hint">あなたの送信数: <span id="countMine">0</span>　最後: <span id="lastMine">-</span></p>
+        </div>
+
+        <div class="card">
+          <h2>相手の最新</h2>
+          <p class="hint">相手の送信数: <span id="countOther">0</span></p>
+          <p class="hint">相手の最後: <span id="lastOther">-</span></p>
+          <p class="hint">相手の頬: <span id="lastOtherCheek">-</span></p>
+          <p class="hint">相手の状況: <span id="lastOtherSession">-</span></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>記録（最新10件）</h2>
+        <div class="logGrid">
+          <div>
+            <h3>me側</h3>
+            <ol id="logMe" class="log"></ol>
+          </div>
+          <div>
+            <h3>you側</h3>
+            <ol id="logYou" class="log"></ol>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="heartBurstLayer"></div>
+
+  <script>
+    const overlay = document.getElementById("titleOverlay");
+    const appRoot = document.getElementById("appRoot");
+
+    const pickMe = document.getElementById("pickMe");
+    const pickYou = document.getElementById("pickYou");
+    const codeInput = document.getElementById("codeInput");
+    const genCode = document.getElementById("genCode");
+    const enterBtn = document.getElementById("enterBtn");
+    const warn = document.getElementById("titleWarn");
+
+    let role = localStorage.getItem("lm_role") || "";
+    let code = localStorage.getItem("lm_code") || "";
+
+    function randomCode(len = 6){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let s = "";
+      for(let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+      return s;
+    }
+
+    function refresh(){
+      pickMe.classList.toggle("isActive", role === "me");
+      pickYou.classList.toggle("isActive", role === "you");
+      if(code && !codeInput.value) codeInput.value = code;
+
+      const hasRole = (role === "me" || role === "you");
+      enterBtn.disabled = !hasRole;
+      warn.textContent = hasRole ? "" : "ME / YOU を選んでください";
+    }
+
+    pickMe.onclick = () => { role = "me"; refresh(); };
+    pickYou.onclick = () => { role = "you"; refresh(); };
+
+    genCode.onclick = () => {
+      codeInput.value = randomCode();
+      refresh();
+    };
+
+    enterBtn.onclick = () => {
+      const hasRole = (role === "me" || role === "you");
+      if(!hasRole){
+        warn.textContent = "ME / YOU を選んでください";
+        return;
+      }
+
+      code = (codeInput.value.trim().toUpperCase() || randomCode());
+      localStorage.setItem("lm_role", role);
+      localStorage.setItem("lm_code", code);
+
+      startApp();
+    };
+
+    function startApp(){
+      document.getElementById("sessionCodeView").textContent = localStorage.getItem("lm_code") || "-";
+      document.getElementById("roleView").textContent = localStorage.getItem("lm_role") || "-";
+
+      overlay.classList.add("hidden");
+      overlay.setAttribute("aria-hidden", "true");
+      appRoot.classList.remove("hidden");
+
+      const s = document.createElement("script");
+      s.type = "module";
+      s.src = "app.js";
+      s.onerror = () => alert("app.js が読み込めません。ファイル名が app.js になっているか確認してね。");
+      document.body.appendChild(s);
+    }
+
+    refresh();
+  </script>
+</body>
+</html>

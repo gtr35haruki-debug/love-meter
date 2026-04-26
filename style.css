@@ -1,0 +1,377 @@
+/* ===== Base ===== */
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;
+  background:#0b1220;
+  color:#e9eefc;
+  -webkit-font-smoothing:antialiased;
+}
+
+.hidden{
+  display:none !important;
+}
+
+.wrap{
+  width:min(1000px,92%);
+  margin:0 auto;
+}
+
+h1,h2,h3{
+  margin:0 0 8px;
+  font-weight:700;
+}
+
+.sub{
+  font-size:13px;
+  opacity:.7;
+  margin:4px 0;
+}
+
+.note{
+  font-size:12px;
+  opacity:.6;
+}
+
+/* ===== Title Overlay ===== */
+.titleOverlay{
+  position:fixed;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:
+    radial-gradient(900px 600px at 10% -10%, rgba(120,160,255,.25), transparent 60%),
+    radial-gradient(800px 500px at 90% 10%, rgba(255,120,200,.25), transparent 60%),
+    #0b1220;
+  backdrop-filter:blur(12px);
+  z-index:50;
+}
+
+.titleCard{
+  width:min(560px,100%);
+  border-radius:24px;
+  padding:22px;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 30px 90px rgba(0,0,0,.4);
+}
+
+.brand{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  padding-bottom:14px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+  margin-bottom:18px;
+}
+
+.brandMark{
+  width:48px;
+  height:48px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.1);
+  font-size:22px;
+}
+
+.brandTitle{
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:2px;
+}
+
+.brandSub{
+  font-size:12px;
+  opacity:.7;
+}
+
+.titleSection{
+  margin-bottom:18px;
+}
+
+.titleLabel{
+  font-size:13px;
+  opacity:.8;
+  margin-bottom:8px;
+}
+
+.rolePick{
+  display:flex;
+  gap:12px;
+}
+
+.rolePickBtn{
+  flex:1;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+  padding:16px 10px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.rolePickBtn:hover{
+  background:rgba(255,255,255,.12);
+}
+
+.rolePickBtn.isActive{
+  background:linear-gradient(135deg,#ff5fa2,#6fa8ff);
+  border:none;
+}
+
+.roleBig{
+  display:block;
+  font-size:20px;
+  font-weight:800;
+}
+
+.roleSmall{
+  display:block;
+  font-size:11px;
+  opacity:.8;
+}
+
+.codeRow{
+  display:flex;
+  gap:8px;
+}
+
+.codeInput{
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+}
+
+.ghostBtn{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.3);
+  background:transparent;
+  color:#fff;
+  cursor:pointer;
+}
+
+.enterBtn{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  font-weight:800;
+  font-size:15px;
+  background:linear-gradient(135deg,#ff5fa2,#6fa8ff);
+  color:#fff;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.enterBtn:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.titleWarn{
+  font-size:12px;
+  color:#ff7a7a;
+  margin-top:6px;
+}
+
+.titleFoot{
+  font-size:11px;
+  opacity:.6;
+  margin-top:10px;
+  text-align:center;
+}
+
+.createdBy{
+  margin-top:12px;
+  text-align:center;
+  font-size:11px;
+  letter-spacing:2px;
+  opacity:.6;
+}
+
+/* ===== Card ===== */
+.card{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+@media(max-width:800px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ===== Meter ===== */
+.meter{
+  width:100%;
+  height:10px;
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  overflow:hidden;
+  margin-top:6px;
+}
+
+.meterXL{
+  height:16px;
+}
+
+.meterSm{
+  height:6px;
+}
+
+.meterFill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#ff5fa2,#6fa8ff);
+  transition:width .18s linear;
+  box-shadow:0 0 18px rgba(255,95,162,.18);
+}
+
+/* ===== Score / Rank ===== */
+.score{
+  font-size:42px;
+  font-weight:900;
+  letter-spacing:.02em;
+  text-shadow:0 0 16px rgba(255,95,162,.15);
+}
+
+.rankRow{
+  margin-top:6px;
+  font-size:14px;
+  opacity:.8;
+}
+
+.loveText{
+  margin-top:16px;
+  text-align:center;
+}
+
+.kaomoji{
+  font-size:32px;
+  display:block;
+}
+
+.commentText{
+  font-size:18px;
+  margin-top:6px;
+  font-weight:700;
+}
+
+/* ===== Buttons ===== */
+button{
+  font-family:inherit;
+}
+
+.btnRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+button{
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  cursor:pointer;
+  transition:.2s;
+}
+
+button:hover{
+  background:rgba(255,255,255,.15);
+}
+
+button.ghost{
+  background:transparent;
+}
+
+button.danger{
+  border:1px solid #ff6b6b;
+  color:#ff6b6b;
+}
+
+.seg{
+  display:flex;
+  gap:6px;
+}
+
+.segBtn.isActive{
+  background:linear-gradient(135deg,#ff5fa2,#6fa8ff);
+  border:none;
+}
+
+/* ===== Log ===== */
+.log{
+  font-size:12px;
+  padding-left:18px;
+  margin:6px 0 0;
+}
+
+.hint{
+  font-size:12px;
+  opacity:.7;
+}
+
+/* ===== Heart Burst ===== */
+#heartBurstLayer{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:999;
+}
+
+.heartBurst{
+  position:absolute;
+  bottom:24%;
+  left:50%;
+  opacity:0;
+  transform:translateX(-50%);
+  animation-name:heartFloatUp;
+  animation-timing-function:ease-out;
+  animation-fill-mode:forwards;
+  filter:drop-shadow(0 0 12px rgba(255,95,162,.42));
+  will-change:transform, opacity;
+}
+
+.sparkBurst{
+  filter:drop-shadow(0 0 14px rgba(255,220,120,.45));
+}
+
+@keyframes heartFloatUp{
+  0%{
+    opacity:0;
+    transform:translate(-50%, 22px) scale(.55) rotate(0deg);
+  }
+  12%{
+    opacity:1;
+    transform:translate(calc(-50% + (var(--driftX) * .15)), 0px) scale(calc(var(--burstScale) * .82)) rotate(calc(var(--burstRotate) * .35));
+  }
+  55%{
+    opacity:1;
+    transform:translate(calc(-50% + (var(--driftX) * .7)), calc(var(--riseY) * -0.55)) scale(var(--burstScale)) rotate(calc(var(--burstRotate) * .8));
+  }
+  100%{
+    opacity:0;
+    transform:translate(calc(-50% + var(--driftX)), calc(var(--riseY) * -1)) scale(calc(var(--burstScale) * 1.18)) rotate(var(--burstRotate));
+  }
+}

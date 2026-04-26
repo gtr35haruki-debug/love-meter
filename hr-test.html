@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HW9 Heart Rate Test</title>
+  <style>
+    body{
+      margin:0;
+      font-family:system-ui,"Noto Sans JP",sans-serif;
+      background:#0b1220;
+      color:white;
+      display:grid;
+      place-items:center;
+      min-height:100vh;
+    }
+    .card{
+      width:min(520px,92%);
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:20px;
+      padding:24px;
+      text-align:center;
+    }
+    h1{margin-top:0}
+    .hr{
+      font-size:72px;
+      font-weight:900;
+      margin:20px 0;
+    }
+    button{
+      font-size:18px;
+      font-weight:700;
+      padding:14px 20px;
+      border-radius:14px;
+      border:0;
+      background:linear-gradient(135deg,#ff5fa2,#6fa8ff);
+      color:white;
+      cursor:pointer;
+    }
+    .log{
+      margin-top:20px;
+      font-size:14px;
+      opacity:.8;
+      white-space:pre-wrap;
+      text-align:left;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>HW9 心拍テスト</h1>
+    <p>COOSPO HW9を装着して、下のボタンを押してください。</p>
+
+    <div class="hr"><span id="hr">--</span> bpm</div>
+
+    <button id="connectBtn">心拍計に接続</button>
+
+    <div id="log" class="log">未接続</div>
+  </div>
+
+  <script>
+    const hrEl = document.getElementById("hr");
+    const logEl = document.getElementById("log");
+    const btn = document.getElementById("connectBtn");
+
+    function log(msg){
+      logEl.textContent = msg;
+      console.log(msg);
+    }
+
+    function parseHeartRate(value){
+      const flags = value.getUint8(0);
+      const is16Bit = flags & 0x01;
+
+      if(is16Bit){
+        return value.getUint16(1, true);
+      }else{
+        return value.getUint8(1);
+      }
+    }
+
+    btn.addEventListener("click", async ()=>{
+      try{
+        if(!navigator.bluetooth){
+          log("このブラウザはWeb Bluetoothに対応していません。Chrome / Edgeで試してください。");
+          return;
+        }
+
+        log("心拍計を検索中...");
+
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [
+            { services: ["heart_rate"] }
+          ],
+          optionalServices: ["heart_rate"]
+        });
+
+        log("接続中: " + device.name);
+
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService("heart_rate");
+        const characteristic = await service.getCharacteristic("heart_rate_measurement");
+
+        await characteristic.startNotifications();
+
+        characteristic.addEventListener("characteristicvaluechanged", (event)=>{
+          const heartRate = parseHeartRate(event.target.value);
+          hrEl.textContent = heartRate;
+          log("受信中: " + heartRate + " bpm\n端末名: " + (device.name || "名称なし"));
+        });
+
+        log("接続成功。心拍数を待っています...");
+
+        device.addEventListener("gattserverdisconnected", ()=>{
+          log("接続が切れました。もう一度接続してください。");
+          hrEl.textContent = "--";
+        });
+
+      }catch(err){
+        log("エラー:\n" + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
