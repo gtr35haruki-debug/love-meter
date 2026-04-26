@@ -5,7 +5,9 @@ import {
   writeTick,
   resetSession,
   setRunning,
-  subscribeControl
+  subscribeControl,
+  getTicks,
+  saveHistoryRecord
 } from "./sync.js";
 
 const $ = (id)=>document.getElementById(id);
@@ -78,12 +80,14 @@ let hrDevice = null;
 let hrCharacteristic = null;
 let latestAutoHR = null;
 
+let experimentStartedAt = null;
+let lastTicksCache = null;
+
 let displayScores = { sync: 0, vari: 0, cheekM: 0, mutual: 0 };
 let targetScores  = { sync: 0, vari: 0, cheekM: 0, mutual: 0 };
 let animFrame = null;
 let currentCommentBucket = -1;
 
-// ---------- Bluetooth Heart Rate ----------
 function setHRStatus(text){
   if(els.hrStatus) els.hrStatus.textContent = text;
 }
@@ -112,9 +116,7 @@ async function connectHeartRate(){
     els.connectHRBtn.textContent = "検索中...";
 
     const device = await navigator.bluetooth.requestDevice({
-      filters: [
-        { services: ["heart_rate"] }
-      ],
+      filters: [{ services: ["heart_rate"] }],
       optionalServices: ["heart_rate"]
     });
 
@@ -162,7 +164,6 @@ async function connectHeartRate(){
   }
 }
 
-// ---------- UI helper ----------
 function setConnected(ok, msg=""){
   els.syncState.textContent = ok ? "接続中" : "未接続";
   els.syncHint.textContent = msg || (ok ? "— Syncing…" : "— Not connected");
@@ -335,7 +336,6 @@ function spawnScoreUpHearts(diff = 3){
   }
 }
 
-// ---------- segments ----------
 function setSeg(active){
   sessionMode = active;
   els.sessionNow.textContent = active === "rest" ? "安静" : (active === "talk" ? "会話" : "無言");
@@ -362,7 +362,6 @@ els.cheekSameBtn.onclick = ()=>setCheek(0);
 els.cheekDownBtn.onclick = ()=>setCheek(-1);
 setCheek(0);
 
-// ---------- scoring ----------
 function computeScores(ticksObj){
   if(!ticksObj) return { sync:0, vari:0, cheekM:0, mutual:0, denom:0, nRows:0 };
 
@@ -383,6 +382,10 @@ function computeScores(ticksObj){
         hrB: Number(you.hr),
         cA: Number(me.cheek),
         cB: Number(you.cheek),
+        modeA: me.mode || "",
+        modeB: you.mode || "",
+        meTime: me.measuredAt || me.tLocal || null,
+        youTime: you.measuredAt || you.tLocal || null
       });
     }
   }
@@ -443,8 +446,9 @@ function computeScores(ticksObj){
   };
 }
 
-// ---------- render ----------
 function renderFromTicks(ticks){
+  lastTicksCache = ticks;
+
   const { sync, vari, cheekM, mutual, denom, nRows } = computeScores(ticks);
 
   if(mutual > prevMutualScore){
@@ -514,7 +518,6 @@ function renderFromTicks(ticks){
     otherLast ? (otherLast.mode === "rest" ? "安静" : otherLast.mode === "talk" ? "会話" : "無言") : "-";
 }
 
-// ---------- send ----------
 function getMyHR(){
   const v = Number(els.hrMine.value);
   if(!Number.isFinite(v) || v <= 0) return null;
@@ -553,11 +556,42 @@ async function sendNow(){
   }
 }
 
-// ---------- local timer ----------
+async function saveCurrentExperiment(){
+  if(SESSION.role !== "me") return;
+
+  const ticks = await getTicks();
+
+  if(!ticks){
+    console.log("保存するticksがありません");
+    return;
+  }
+
+  const summary = computeScores(ticks);
+
+  const record = {
+    startedAt: experimentStartedAt || Date.now(),
+    endedAt: Date.now(),
+    ticks,
+    summary
+  };
+
+  const recordId = await saveHistoryRecord(record);
+
+  if(recordId){
+    console.log("実験記録を保存しました:", recordId);
+    els.status.textContent = "停止中（記録保存済み）";
+  }
+}
+
 function runLocalStart(){
   if(isRunning) return;
 
   isRunning = true;
+
+  if(!experimentStartedAt){
+    experimentStartedAt = Date.now();
+  }
+
   els.status.textContent = "計測中";
 
   remain = 10;
@@ -594,9 +628,9 @@ function runLocalStop(){
   els.nextIn.textContent = "-";
 }
 
-// ---------- synced control ----------
 async function startMeasure(){
   if(SESSION.role === "me"){
+    experimentStartedAt = Date.now();
     await setRunning(true);
   }
 
@@ -606,12 +640,13 @@ async function startMeasure(){
 async function stopMeasure(){
   if(SESSION.role === "me"){
     await setRunning(false);
+    runLocalStop();
+    await saveCurrentExperiment();
+  }else{
+    runLocalStop();
   }
-
-  runLocalStop();
 }
 
-// ---------- buttons wiring ----------
 els.connectHRBtn.onclick = ()=>connectHeartRate();
 els.startBtn.onclick = ()=>startMeasure();
 els.stopBtn.onclick = ()=>stopMeasure();
@@ -627,6 +662,9 @@ els.resetBtn.onclick = async ()=>{
     await resetSession();
 
     prevMutualScore = 0;
+    experimentStartedAt = null;
+    lastTicksCache = null;
+
     targetScores = { sync: 0, vari: 0, cheekM: 0, mutual: 0 };
     displayScores = { sync: 0, vari: 0, cheekM: 0, mutual: 0 };
 
@@ -637,7 +675,6 @@ els.resetBtn.onclick = async ()=>{
   }
 };
 
-// ---------- subscribe ----------
 updateScoreTexts(0, 0, 0, 0);
 setHRStatus("未接続");
 setConnected(true, "— Connecting…");

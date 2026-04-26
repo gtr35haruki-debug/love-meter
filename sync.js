@@ -21,7 +21,7 @@ function loadSession(){
   const role = (roleRaw === "me" || roleRaw === "you") ? roleRaw : "";
 
   if(!code || !role){
-    throw new Error("Session not initialized (role/code missing).");
+    throw new Error("Session not initialized.");
   }
 
   return { code, role };
@@ -35,16 +35,12 @@ const tickRef = ref(db, `${base}/tick`);
 const ticksRef = ref(db, `${base}/ticks`);
 const controlRef = ref(db, `${base}/control`);
 
-const latestMeRef = ref(db, `${base}/me/latest`);
-const latestYouRef = ref(db, `${base}/you/latest`);
-
 export async function getTick(){
   const snap = await get(tickRef);
   return snap.exists() ? Number(snap.val()) : 0;
 }
 
 export async function advanceTick(){
-  // MEだけがtickを進める
   if(SESSION.role !== "me"){
     return await getTick();
   }
@@ -76,18 +72,7 @@ export function subscribeTicks(cb){
   });
 }
 
-export function subscribeLatest(cb){
-  onValue(latestMeRef, ()=>{});
-  onValue(latestYouRef, ()=>{});
-
-  onValue(ref(db, base), (snap)=>{
-    const v = snap.exists() ? snap.val() : null;
-    cb(v);
-  });
-}
-
 export async function setRunning(isRunning){
-  // START/STOPの司令塔はMEだけ
   if(SESSION.role !== "me") return;
 
   await set(controlRef, {
@@ -103,8 +88,27 @@ export function subscribeControl(cb){
   });
 }
 
+export async function getTicks(){
+  const snap = await get(ticksRef);
+  return snap.exists() ? snap.val() : null;
+}
+
+export async function saveHistoryRecord(record){
+  if(SESSION.role !== "me") return null;
+
+  const recordId = String(Date.now());
+
+  await set(ref(db, `${base}/history/${recordId}`), {
+    ...record,
+    recordId,
+    sessionCode: SESSION.code,
+    savedAt: Date.now()
+  });
+
+  return recordId;
+}
+
 export async function resetSession(){
-  // 研究用：全部消す。MEだけ許可
   if(SESSION.role !== "me") return;
   await remove(ref(db, base));
 }
